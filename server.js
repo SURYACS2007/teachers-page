@@ -1,4 +1,4 @@
-export default Student;     require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
       console.error('Error fetching data:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    console.log(Fetched ${data.length} students);
+    console.log(`Fetched ${data.length} students`);
     return res.json(data);
   });
 });
@@ -93,7 +93,7 @@ app.post('/create', (req, res) => {
       return res.status(500).json({ error: 'Failed to insert data' });
     }
     
-    console.log(✅ Inserted student: ${name} (${roll}));
+    console.log(`✅ Inserted student: ${name} (${roll})`);
     return res.json({ 
       message: 'Success', 
       id: result.insertId,
@@ -136,7 +136,7 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(🚀 Server running on port ${PORT});
-  console.log(📍 Health check: /health);
-  console.log(📍 Test endpoint: /test);
-}); 
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Health check: /health`);
+  console.log(`📍 Test endpoint: /test`);
+});
