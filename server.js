@@ -13,11 +13,10 @@ const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,  
+  port: process.env.DB_PORT,    
 });
 
-// Test DB connection on start
 db.getConnection((err, connection) => {
   if (err) console.error('DB connection failed:', err);
   else {
@@ -35,7 +34,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Add student marks
 app.post('/create', (req, res) => {
   const { name, roll, jp, ds, vccf, daa, dpco } = req.body;
 
@@ -43,6 +41,22 @@ app.post('/create', (req, res) => {
 
   const sql = 'INSERT INTO stdmark (NAME, ROLL, JP, DS, VCCF, DAA, DPCO) VALUES (?, ?, ?, ?, ?, ?, ?)';
   const values = [name.trim(), roll.trim(), jp || null, ds || null, vccf || null, daa || null, dpco || null];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Student exists' });
+      return res.status(500).json({ error: 'Insert failed' });
+    }
+    res.json({ message: 'Success', id: result.insertId });
+  });
+});
+app.post('/jpmark', (req, res) => {
+  const { name, roll, jp} = req.body;
+
+  if (!name || !roll) return res.status(400).json({ error: 'Name and Roll required' });
+
+  const sql = 'INSERT INTO stdmark (JP) VALUES (?)';
+  const values = [jp || null];
 
   db.query(sql, values, (err, result) => {
     if (err) {
