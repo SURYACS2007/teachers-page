@@ -1,4 +1,4 @@
-require('dotenv').config();
+export default Student;    require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
@@ -50,22 +50,70 @@ app.post('/create', (req, res) => {
     res.json({ message: 'Success', id: result.insertId });
   });
 });
-app.post('/jpmark', (req, res) => {
-  const { name, roll, jp} = req.body;
 
-  if (!name || !roll) return res.status(400).json({ error: 'Name and Roll required' });
 
-  const sql = 'INSERT INTO stdmark (JP) VALUES (?)';
-  const values = [jp || null];
+
+
+
+app.post('/createjp', (req, res) => {
+  const { roll, jp } = req.body;
+
+  if (!roll) {
+    return res.status(400).json({ error: 'Name and Roll required' });
+  }
+
+  const sql = `UPDATE submark SET JP = ? WHERE ROLL = ?`;
+
+  const values = [jp || null, roll.trim()];
 
   db.query(sql, values, (err, result) => {
     if (err) {
-      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Student exists' });
-      return res.status(500).json({ error: 'Insert failed' });
+      return res.status(500).json({ error: 'Update failed' });
     }
-    res.json({ message: 'Success', id: result.insertId });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    res.json({ message: 'Updated successfully' });
   });
 });
+
+// Delete single student
+app.delete('/deletejp/:roll', (req, res) => {
+  const { roll } = req.params;
+
+  const sql = 'DELETE FROM submark WHERE ROLL = ?';
+  db.query(sql, [roll], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Delete failed' });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Student not found' });
+    res.json({ message: 'Deleted successfully' });
+  });
+});
+
+app.delete('/delete-alljp', (req, res) => {
+  const sql = 'DELETE FROM submark';
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ error: 'Delete all failed' });
+    res.json({ message: 'All students deleted successfully' });
+  });
+});
+
+
+
+
+
+//--------------------------------------
+
+
+
+
+
+
+
+
+
+
 // Delete single student
 app.delete('/delete/:roll', (req, res) => {
   const { roll } = req.params;
@@ -96,5 +144,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port ${PORT}");
 });
