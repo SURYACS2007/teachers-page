@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// -------------------- DATABASE CONNECTION --------------------
 const db = mysql.createPool({
   connectionLimit: 10,
   host: process.env.DB_HOST,
@@ -18,7 +19,7 @@ const db = mysql.createPool({
 });
 
 db.getConnection((err, connection) => {
-  if (err) console.error('DB connection failed:', err);
+  if (err) console.error('❌ DB connection failed:', err);
   else {
     console.log('✅ Connected to MySQL database');
     connection.release();
@@ -61,45 +62,23 @@ app.get('/jpstudent', (req, res) => {
   });
 });
 
-// -------------------- CREATE/UPDATE JP --------------------
+// -------------------- CREATE JP (INSERT WITH NAME) --------------------
 app.post('/createjp', (req, res) => {
-  const { roll, jp } = req.body;
+  const { roll, name, jp } = req.body;
 
-  if (!roll) {
-    return res.status(400).json({ error: 'Roll required' });
+  if (!roll || !name) {
+    return res.status(400).json({ error: 'Name and Roll required' });
   }
 
-  // Insert if not exists, otherwise update
-  const sql = `
-    INSERT INTO submark (ROLL, JP)
-    VALUES (?, ?)
-    ON DUPLICATE KEY UPDATE JP = VALUES(JP)
-  `;
-  db.query(sql, [roll.trim(), jp || null], (err, result) => {
+  const sql = `INSERT INTO submark (ROLL, NAME, JP) VALUES (?, ?, ?)`;
+  db.query(sql, [roll.trim(), name.trim(), jp || null], (err, result) => {
     if (err) {
-      return res.status(500).json({ error: 'Update failed' });
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'JP mark already exists for this roll' });
+      }
+      return res.status(500).json({ error: 'Insert failed' });
     }
-    res.json({ message: 'Updated successfully' });
-  });
-});
-
-// -------------------- DELETE SINGLE JP --------------------
-app.delete('/deletejp/:roll', (req, res) => {
-  const { roll } = req.params;
-  const sql = 'DELETE FROM submark WHERE ROLL = ?';
-  db.query(sql, [roll], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Delete failed' });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Student not found' });
-    res.json({ message: 'Deleted successfully' });
-  });
-});
-
-// -------------------- DELETE ALL JP --------------------
-app.delete('/delete-alljp', (req, res) => {
-  const sql = 'DELETE FROM submark';
-  db.query(sql, (err, result) => {
-    if (err) return res.status(500).json({ error: 'Delete all failed' });
-    res.json({ message: 'All students deleted successfully' });
+    res.json({ message: 'Inserted successfully', id: result.insertId });
   });
 });
 
