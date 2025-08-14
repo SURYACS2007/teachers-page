@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// -------------------- DATABASE CONNECTION --------------------
+// Database connection
 const db = mysql.createPool({
   connectionLimit: 10,
   host: process.env.DB_HOST,
@@ -19,14 +19,14 @@ const db = mysql.createPool({
 });
 
 db.getConnection((err, connection) => {
-  if (err) console.error('❌ DB connection failed:', err);
+  if (err) console.error('DB connection failed:', err);
   else {
-    console.log('✅ Connected to MySQL database');
+    console.log('Connected to MySQL database');
     connection.release();
   }
 });
 
-// -------------------- GET ALL STUDENTS --------------------
+// Get all students
 app.get('/', (req, res) => {
   const sql = 'SELECT * FROM stdmark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// -------------------- CREATE STUDENT --------------------
+// Create student
 app.post('/create', (req, res) => {
   const { name, roll, jp, ds, vccf, daa, dpco } = req.body;
 
@@ -53,7 +53,7 @@ app.post('/create', (req, res) => {
   });
 });
 
-// -------------------- GET JP STUDENTS --------------------
+// Get JP students
 app.get('/jpstudent', (req, res) => {
   const sql = 'SELECT * FROM submark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -62,7 +62,7 @@ app.get('/jpstudent', (req, res) => {
   });
 });
 
-// -------------------- CREATE JP (INSERT WITH NAME) --------------------
+// Create JP (insert with name)
 app.post('/createjp', (req, res) => {
   const { roll, name, jp } = req.body;
 
@@ -82,7 +82,7 @@ app.post('/createjp', (req, res) => {
   });
 });
 
-// -------------------- DELETE SINGLE STUDENT --------------------
+// Delete single student
 app.delete('/delete/:roll', (req, res) => {
   const { roll } = req.params;
   const sql = 'DELETE FROM stdmark WHERE ROLL = ?';
@@ -93,7 +93,7 @@ app.delete('/delete/:roll', (req, res) => {
   });
 });
 
-// -------------------- DELETE ALL STUDENTS --------------------
+// Delete all students
 app.delete('/delete-all', (req, res) => {
   const sql = 'DELETE FROM stdmark';
   db.query(sql, (err, result) => {
@@ -102,7 +102,7 @@ app.delete('/delete-all', (req, res) => {
   });
 });
 
-// -------------------- GLOBAL ERROR HANDLER --------------------
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
@@ -110,5 +110,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
