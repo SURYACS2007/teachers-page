@@ -26,7 +26,7 @@ db.getConnection((err, connection) => {
   }
 });
 
-// Get all students
+// Get all students from stdmark
 app.get('/', (req, res) => {
   const sql = 'SELECT * FROM stdmark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -35,10 +35,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// Create student
+// Create student in stdmark
 app.post('/create', (req, res) => {
   const { name, roll, jp, ds, vccf, daa, dpco } = req.body;
-
   if (!name || !roll) return res.status(400).json({ error: 'Name and Roll required' });
 
   const sql = 'INSERT INTO stdmark (NAME, ROLL, JP, DS, VCCF, DAA, DPCO) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -53,7 +52,7 @@ app.post('/create', (req, res) => {
   });
 });
 
-// Get JP students
+// Get JP students from submark
 app.get('/jpstudent', (req, res) => {
   const sql = 'SELECT * FROM submark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -62,30 +61,25 @@ app.get('/jpstudent', (req, res) => {
   });
 });
 
-// Create JP (insert with name)
+// Create JP entry (with name)
 app.post('/createjp', (req, res) => {
   const { roll, name, jp } = req.body;
+  if (!roll || !name) return res.status(400).json({ error: 'Name and Roll required' });
 
-  if (!roll || !name) {
-    return res.status(400).json({ error: 'Name and Roll required' });
-  }
-
-  const sql = `INSERT INTO submark (ROLL, NAME, JP) VALUES (?, ?, ?)`;
+  const sql = 'INSERT INTO submark (ROLL, NAME, JP) VALUES (?, ?, ?)';
   db.query(sql, [roll.trim(), name.trim(), jp || null], (err, result) => {
     if (err) {
-      if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(409).json({ error: 'JP mark already exists for this roll' });
-      }
+      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'JP mark already exists for this roll' });
       return res.status(500).json({ error: 'Insert failed' });
     }
     res.json({ message: 'Inserted successfully', id: result.insertId });
   });
 });
 
-// Delete single student
-app.delete('/delete/:roll', (req, res) => {
+// Delete single JP student
+app.delete('/deletejp/:roll', (req, res) => {
   const { roll } = req.params;
-  const sql = 'DELETE FROM stdmark WHERE ROLL = ?';
+  const sql = 'DELETE FROM submark WHERE ROLL = ?';
   db.query(sql, [roll], (err, result) => {
     if (err) return res.status(500).json({ error: 'Delete failed' });
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Student not found' });
@@ -93,12 +87,12 @@ app.delete('/delete/:roll', (req, res) => {
   });
 });
 
-// Delete all students
-app.delete('/delete-all', (req, res) => {
-  const sql = 'DELETE FROM stdmark';
+// Delete all JP students
+app.delete('/delete-alljp', (req, res) => {
+  const sql = 'DELETE FROM submark';
   db.query(sql, (err, result) => {
     if (err) return res.status(500).json({ error: 'Delete all failed' });
-    res.json({ message: 'All students deleted successfully' });
+    res.json({ message: 'All JP students deleted successfully' });
   });
 });
 
