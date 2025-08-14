@@ -52,6 +52,15 @@ app.post('/create', (req, res) => {
 });
 
 
+app.get('/jpstudent', (req, res) => {
+  const sql = 'SELECT * FROM submark ORDER BY NAME';
+  db.query(sql, (err, data) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(data);
+  });
+});
+
+
 
 
 
