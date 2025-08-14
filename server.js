@@ -1,4 +1,4 @@
-export default Student;    require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
@@ -13,8 +13,8 @@ const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,  
-  port: process.env.DB_PORT,    
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 });
 
 db.getConnection((err, connection) => {
@@ -25,7 +25,7 @@ db.getConnection((err, connection) => {
   }
 });
 
-// Get all students
+// -------------------- GET ALL STUDENTS --------------------
 app.get('/', (req, res) => {
   const sql = 'SELECT * FROM stdmark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -34,6 +34,7 @@ app.get('/', (req, res) => {
   });
 });
 
+// -------------------- CREATE STUDENT --------------------
 app.post('/create', (req, res) => {
   const { name, roll, jp, ds, vccf, daa, dpco } = req.body;
 
@@ -51,7 +52,7 @@ app.post('/create', (req, res) => {
   });
 });
 
-
+// -------------------- GET JP STUDENTS --------------------
 app.get('/jpstudent', (req, res) => {
   const sql = 'SELECT * FROM submark ORDER BY NAME';
   db.query(sql, (err, data) => {
@@ -60,38 +61,31 @@ app.get('/jpstudent', (req, res) => {
   });
 });
 
-
-
-
-
+// -------------------- CREATE/UPDATE JP --------------------
 app.post('/createjp', (req, res) => {
   const { roll, jp } = req.body;
 
   if (!roll) {
-    return res.status(400).json({ error: 'Name and Roll required' });
+    return res.status(400).json({ error: 'Roll required' });
   }
 
-  const sql = `UPDATE submark SET JP = ? WHERE ROLL = ?`;
-
-  const values = [jp || null, roll.trim()];
-
-  db.query(sql, values, (err, result) => {
+  // Insert if not exists, otherwise update
+  const sql = `
+    INSERT INTO submark (ROLL, JP)
+    VALUES (?, ?)
+    ON DUPLICATE KEY UPDATE JP = VALUES(JP)
+  `;
+  db.query(sql, [roll.trim(), jp || null], (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Update failed' });
     }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-
     res.json({ message: 'Updated successfully' });
   });
 });
 
-// Delete single student
+// -------------------- DELETE SINGLE JP --------------------
 app.delete('/deletejp/:roll', (req, res) => {
   const { roll } = req.params;
-
   const sql = 'DELETE FROM submark WHERE ROLL = ?';
   db.query(sql, [roll], (err, result) => {
     if (err) return res.status(500).json({ error: 'Delete failed' });
@@ -100,6 +94,7 @@ app.delete('/deletejp/:roll', (req, res) => {
   });
 });
 
+// -------------------- DELETE ALL JP --------------------
 app.delete('/delete-alljp', (req, res) => {
   const sql = 'DELETE FROM submark';
   db.query(sql, (err, result) => {
@@ -108,25 +103,9 @@ app.delete('/delete-alljp', (req, res) => {
   });
 });
 
-
-
-
-
-//--------------------------------------
-
-
-
-
-
-
-
-
-
-
-// Delete single student
+// -------------------- DELETE SINGLE STUDENT --------------------
 app.delete('/delete/:roll', (req, res) => {
   const { roll } = req.params;
-
   const sql = 'DELETE FROM stdmark WHERE ROLL = ?';
   db.query(sql, [roll], (err, result) => {
     if (err) return res.status(500).json({ error: 'Delete failed' });
@@ -135,7 +114,7 @@ app.delete('/delete/:roll', (req, res) => {
   });
 });
 
-// Delete all students
+// -------------------- DELETE ALL STUDENTS --------------------
 app.delete('/delete-all', (req, res) => {
   const sql = 'DELETE FROM stdmark';
   db.query(sql, (err, result) => {
@@ -144,8 +123,7 @@ app.delete('/delete-all', (req, res) => {
   });
 });
 
-
-// Global error handler
+// -------------------- GLOBAL ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
@@ -153,5 +131,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log("Server running on port ${PORT}");
+  console.log(`🚀 Server running on port ${PORT}`);
 });
