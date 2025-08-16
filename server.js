@@ -91,6 +91,7 @@ app.post('/createjp', (req, res) => {
     return res.status(400).json({ error: 'Roll and JP are required' });
   }
 
+  // ✅ Only JP column gets updated
   const sql = 'UPDATE submark SET JP = ? WHERE ROLL = ?';
   db.query(sql, [jp, roll], (err, result) => {
     if (err) {
