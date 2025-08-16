@@ -87,7 +87,7 @@ app.get('/jpstudent', (req, res) => {
 app.post('/createjp', (req, res) => {
   const { roll, jp } = req.body;
 
-  if (!roll || !jp) {
+  if (!roll || jp === undefined) {
     return res.status(400).json({ error: 'Roll and JP are required' });
   }
 
@@ -98,13 +98,12 @@ app.post('/createjp', (req, res) => {
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Roll not found' });
+      return res.status(404).json({ error: 'Roll not found in database' });
     }
 
     res.json({ message: 'JP mark updated successfully' });
   });
 });
-
 
 
 
