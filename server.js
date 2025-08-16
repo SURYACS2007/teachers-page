@@ -86,24 +86,17 @@ app.get('/jpstudent', (req, res) => {
 
 app.post('/createjp', (req, res) => {
   const { roll, jp } = req.body;
-
-  if (!roll) {
-    return res.status(400).json({ error: 'Roll number is required' });
-  }
+  if (!roll) return res.status(400).json({ error: 'Roll required' });
 
   const sql = 'UPDATE submark SET JP = ? WHERE ROLL = ?';
   db.query(sql, [jp || null, roll.trim()], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: 'Update failed' });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Roll number not found' });
-    }
+    if (err) return res.status(500).json({ error: 'Update failed' });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Roll not found' });
 
     res.json({ message: 'JP mark updated successfully' });
   });
 });
+
 
 
 
