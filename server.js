@@ -67,7 +67,7 @@ app.post('/createjp', (req, res) => {
   const { roll, jp } = req.body;
 
   if (!roll || jp === undefined) {
-    return res.status(400).json({ error: 'Roll and JP are required' });
+    return res.status(400).json({ error: 'Roll and JP are rwerqwrequired' });
   }
 
   // Update JP mark only (student already exists in stdmark)
