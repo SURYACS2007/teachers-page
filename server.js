@@ -62,35 +62,27 @@ app.get('/jpstudent', (req, res) => {
 });
 
 // ✅ Create or Update JP entry
+// ✅ Create or Update only JP mark
 app.post('/createjp', (req, res) => {
-  const { roll, name, jp } = req.body;
+  const { roll, jp } = req.body;
 
   if (!roll || jp === undefined) {
     return res.status(400).json({ error: 'Roll and JP are required' });
   }
 
-  // Check if roll exists
-  const checkSql = 'SELECT * FROM submark WHERE ROLL = ?';
-  db.query(checkSql, [roll], (err, result) => {
+  // Update JP mark only (student already exists in stdmark)
+  const updateSql = 'UPDATE stdmark SET JP = ? WHERE ROLL = ?';
+  db.query(updateSql, [jp, roll], (err, result) => {
     if (err) return res.status(500).json({ error: 'Database error' });
 
-    if (result.length > 0) {
-      // Update JP
-      const updateSql = 'UPDATE submark SET JP = ? WHERE ROLL = ?';
-      db.query(updateSql, [jp, roll], (err2) => {
-        if (err2) return res.status(500).json({ error: 'Update failed' });
-        return res.json({ message: 'JP mark updated successfully' });
-      });
-    } else {
-      // Insert new record
-      const insertSql = 'INSERT INTO submark (ROLL, NAME, JP) VALUES (?, ?, ?)';
-      db.query(insertSql, [roll.trim(), name?.trim() || null, jp], (err3) => {
-        if (err3) return res.status(500).json({ error: 'Insert failed' });
-        return res.json({ message: 'JP mark inserted successfully' });
-      });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Roll not found' });
     }
+
+    res.json({ message: 'JP mark stored successfully' });
   });
 });
+
 
 // Delete single JP student
 app.delete('/deletejp/:roll', (req, res) => {
