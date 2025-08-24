@@ -63,7 +63,7 @@ app.get('/jpstudent', (req, res) => {
 
 // ✅ Create or Update JP entry
 // ✅ Create or Update only JP mark
-app.post('/createjp', (req, res) => {
+app.updateSql('/createjp', (req, res) => {
   const { roll, jp } = req.body;
 
   if (!roll || jp === undefined) {
